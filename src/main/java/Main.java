@@ -1,6 +1,10 @@
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -16,8 +20,6 @@ public class Main {
             // Convert String Array to List
             List<String> typesList = Arrays.asList(types);
             JSONObject results = new JSONObject();
-
-
 
             List<JSONObject> healthyLine  = new ArrayList();
             List<JSONObject> unhealthyLine  = new ArrayList();
@@ -41,10 +43,20 @@ public class Main {
                 }
             }
 
-            for(int i = 0; i < healthyLine.size(); i++) {
-                System.out.println(healthyLine.get(i));
-            }
+            results.put("inputFile" , "EEEEEEEEEEEe");
+            results.put("references" , healthyLine);
+            results.put("errors" , unhealthyLine);
 
+
+
+            try (FileWriter filer = new FileWriter("/Users/keeg/workspace/txtFileConverter/src/main/resources/output.json")) {
+
+                filer.write(results.toString());
+                filer.flush();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
         }
 }
