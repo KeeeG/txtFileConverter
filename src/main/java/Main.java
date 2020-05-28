@@ -1,6 +1,12 @@
+import com.thoughtworks.xstream.XStream;
+import model.Reference;
+import model.ReferenceList;
 import org.json.JSONObject;
-import org.json.XML;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -16,6 +22,8 @@ public class Main {
 
         public static void main(String[] args) throws Exception {
 
+
+            // A Map containes a list of list of strings
             Map<String, List<List<String>>> fileContent = new HashMap<>();
 
             // Checking if first argument ( input file path is not null
@@ -23,10 +31,11 @@ public class Main {
                 fileContent = parseTextFile(args[0]);
                 JSONObject results = new JSONObject();
 
-                // Checking if the output will be JSON or not
+                // Checking if the output should be JSON
                 if (  args[1] != null && args[1].toString().toUpperCase().equals("JSON")){
-                    results = buildJSON(fileContent, args[0], args[2]);
+                    results = buildJSON(fileContent, args[0]);
 
+                    // Writing the JSON file
                     try (FileWriter filer = new FileWriter( args[2] )) {
 
                         filer.write(results.toString());
@@ -36,12 +45,34 @@ public class Main {
                         e.printStackTrace();
                     }
                 }
-            }
+                // Checking if the output should be XML
+                else if (  args[1] != null && args[1].toString().toUpperCase().equals("XML")){
 
+                    // Building the XML object from Classes with XSTREAM
+                    XStream xstream = new XStream();
+                    xstream.alias("reference", Reference.class);
+                    xstream.alias("references", ReferenceList.class);
+                    xstream.addImplicitCollection(ReferenceList.class, "list");
+
+                    ReferenceList list = new ReferenceList();
+
+                    for (int i = 0; i < fileContent.get("references").size(); i++){
+
+                        list.add(new Reference(fileContent.get("references").get(i).get(0), fileContent.get("references").get(i).get(1),fileContent.get("references").get(i).get(2), fileContent.get("references").get(i).get(3)));
+                    }
+
+
+                    String xml = xstream.toXML(list);
+                    // TODO: Create the XML File
+
+
+                }
+            }
         }
 
 
-        private static JSONObject buildJSON (Map<String, List<List<String>>> file, String inputPath, String outputPath)throws Exception{
+        // Building the Json from the MAP
+        private static JSONObject buildJSON (Map<String, List<List<String>>> file, String inputPath)throws Exception{
 
             JSONObject results = new JSONObject();
 
@@ -49,6 +80,7 @@ public class Main {
             List<JSONObject> healthyLine  = new ArrayList();
             List<JSONObject> unhealthyLine  = new ArrayList();
 
+            // Parsing the healthy references
             for (int i = 0; i < file.get("references").size(); i++){
 
                 JSONObject obj = new JSONObject();
@@ -63,6 +95,8 @@ public class Main {
             }
             results.put("references" , healthyLine);
 
+
+            //Parsing the unhealthy references
             for (int i = 0; i < file.get("errors").size(); i++){
 
                 JSONObject obj = new JSONObject();
@@ -79,6 +113,8 @@ public class Main {
             return results;
         }
 
+
+        // Convert the text file content to a MAP
         private static Map<String, List<List<String>>> parseTextFile (String inputFile) throws Exception{
 
             Map<String, List<List<String>>> results = new HashMap<>();
@@ -106,7 +142,6 @@ public class Main {
             }
             return results;
         }
-
 }
 
 
